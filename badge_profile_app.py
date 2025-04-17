@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
-import io
+import os
 
 # Define badge categories and tiers
 BADGE_CATEGORIES = [
@@ -15,6 +15,15 @@ BADGE_CATEGORIES = [
     'Participation (Speech)'
 ]
 
+BADGE_ICON_FILES = [
+    'quill_icon.png',
+    'brain_icon.png',
+    'spark_icon.png',
+    'hourglass_icon.png',
+    'dragon_icon.png',
+    'speech_icon.png'
+]
+
 TIER_LEVELS = {
     "None": 0,
     "Bronze": 1,
@@ -22,18 +31,22 @@ TIER_LEVELS = {
     "Gold": 3
 }
 
-# Load badge icon grid (2x3 image file)
+# Load individual badge icons
 @st.cache_data
-def load_badge_icons():
-    base_image = Image.open("badge_icons.png.png")
-    icons = [base_image.crop((i % 3 * 384, i // 3 * 384, (i % 3 + 1) * 384, (i // 3 + 1) * 384)) for i in range(6)]
-    resized = [icon.resize((40, 40)) for icon in icons]
-    return resized
+def load_individual_icons():
+    icons = []
+    for file in BADGE_ICON_FILES:
+        if os.path.exists(file):
+            icon = Image.open(file).resize((40, 40))
+            icons.append(icon)
+        else:
+            icons.append(None)
+    return icons
 
 st.title("Pablómon Badge Profile Generator")
 st.markdown("Select your current tier for each badge below. A radar chart will be generated based on your selections.")
 
-badge_icons = load_badge_icons()
+badge_icons = load_individual_icons()
 
 # Collect badge tiers from user
 badge_tiers = {}
@@ -58,17 +71,18 @@ if st.button("Generate Badge Profile Chart"):
     ax.set_yticklabels(['None', 'Bronze', 'Silver', 'Gold'])
     ax.set_ylim(0, 3)
 
-    # Add badge icons directly to radar chart
+    # Add individual badge icons directly to radar chart
     for i, angle in enumerate(angles[:-1]):
         icon = badge_icons[i]
-        img_arr = np.array(icon)
-        imagebox = OffsetImage(img_arr, zoom=0.2)
-        ab = AnnotationBbox(
-            imagebox,
-            (angle, 3.2),  # Place just outside the radar
-            frameon=False,
-            xycoords='polar'
-        )
-        ax.add_artist(ab)
+        if icon:
+            img_arr = np.array(icon)
+            imagebox = OffsetImage(img_arr, zoom=0.2)
+            ab = AnnotationBbox(
+                imagebox,
+                (angle, 3.2),  # Position outside the outer ring
+                frameon=False,
+                xycoords='polar'
+            )
+            ax.add_artist(ab)
 
     st.pyplot(fig)
