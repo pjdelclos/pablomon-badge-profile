@@ -37,7 +37,7 @@ def load_individual_icons():
     icons = []
     for file in BADGE_ICON_FILES:
         if os.path.exists(file):
-            icon = Image.open(file).resize((40, 40))
+            icon = Image.open(file).resize((400, 400))
             icons.append(icon)
         else:
             icons.append(None)
@@ -71,17 +71,26 @@ if st.button("Generate Badge Profile Chart"):
     ax.set_yticklabels(['None', 'Bronze', 'Silver', 'Gold'])
     ax.set_ylim(0, 3)
 
-    # Add individual badge icons directly to radar chart
-    for i, angle in enumerate(angles[:-1]):
-        icon = badge_icons[i]
+    # Manually position icons using axes fraction coordinates
+    positions = [
+        (1.1,0.5),  # Quill (right)
+        (0.85, 1.03),  # Brain (top-right)
+        (0.15, 1.03), # Spark (top-left)
+        (-0.1, 0.5),  # Hourglass (left)
+        (0.15, -0.03), # Dragon (bottom-left)
+        (0.85, -0.03)   # Speech (bottom-right)
+    ]
+
+    for icon, (x, y) in zip(badge_icons, positions):
         if icon:
             img_arr = np.array(icon)
-            imagebox = OffsetImage(img_arr, zoom=0.2)
+            imagebox = OffsetImage(img_arr, zoom=0.15)
             ab = AnnotationBbox(
                 imagebox,
-                (angle, 3.2),  # Position outside the outer ring
+                (x, y),
                 frameon=False,
-                xycoords='polar'
+                xycoords='axes fraction',
+                clip_on=False
             )
             ax.add_artist(ab)
 
